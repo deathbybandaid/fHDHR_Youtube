@@ -64,7 +64,12 @@ class proxyserviceFetcher():
                     if channel_key in list(self.config[station]):
                         station_item[channel_key] = str(self.config[station][channel_key])
             if "number" in list(station_item.keys()) and "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
-                station_list.append(station_item)
+                clean_station_item = {
+                                     "name": station_item["name"],
+                                     "number": station_item["number"],
+                                     "id": station_item["videoid"],
+                                     }
+                station_list.append(clean_station_item)
         return station_list
 
     def get_station_list(self, base_url):
