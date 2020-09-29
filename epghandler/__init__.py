@@ -163,6 +163,7 @@ class EPGhandler():
                 timestamps.append(timestampdict)
 
         for c in self.serviceproxy.get_channels():
+
             if str(c["number"]) not in list(programguide.keys()):
                 programguide[str(c["number"])] = {}
 
