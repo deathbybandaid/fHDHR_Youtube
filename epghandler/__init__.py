@@ -52,10 +52,10 @@ class EPGhandler():
         epg_method = self.config["fakehdhr"]["epg_method"]
 
         out = ET.Element('tv')
-        out.set('source-info-url', 'Locast')
-        out.set('source-info-name', 'Locast')
+        out.set('source-info-url', 'Youtube')
+        out.set('source-info-name', 'Youtube')
         out.set('generator-info-name', 'FAKEHDHR')
-        out.set('generator-info-url', 'FAKEHDHR/FakeHDHR_Locast')
+        out.set('generator-info-url', 'FAKEHDHR/FakeHDHR_Youtube')
 
         for c in list(epgdict.keys()):
 
@@ -140,10 +140,10 @@ class EPGhandler():
 
     def dummyxml(self):
         out = ET.Element('tv')
-        out.set('source-info-url', 'Locast')
-        out.set('source-info-name', 'Locast')
+        out.set('source-info-url', 'Youtube')
+        out.set('source-info-name', 'Youtube')
         out.set('generator-info-name', 'FAKEHDHR')
-        out.set('generator-info-url', 'FAKEHDHR/FakeHDHR_Locast')
+        out.set('generator-info-url', 'FAKEHDHR/FakeHDHR_Youtube')
 
         fakefile = BytesIO()
         fakefile.write(b'<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -162,7 +162,7 @@ def epgServerProcess(config, epghandling):
     if config.config["fakehdhr"]["epg_method"] == "empty":
         sleeptime = config.config["main"]["empty_epg_update_frequency"]
     elif config.config["fakehdhr"]["epg_method"] == "proxy":
-        sleeptime = config.config["locast"]["epg_update_frequency"]
+        sleeptime = config.config["youtube"]["epg_update_frequency"]
     elif config.config["fakehdhr"]["epg_method"] == "zap2it":
         sleeptime = config.config["zap2xml"]["epg_update_frequency"]
 

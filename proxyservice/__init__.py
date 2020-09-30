@@ -2,6 +2,7 @@ import os
 import json
 import datetime
 import urllib.request
+import pafy
 
 
 class proxyserviceFetcher():
@@ -37,11 +38,11 @@ class proxyserviceFetcher():
             video_data = json.load(video_response)
 
             self.video_records[id] = {
-                                            "stream": "https://www.youtube.com/watch?v=" + id,
+                                            "stream": None,
                                             "title": video_data["items"][0]["snippet"]["title"],
                                             "description": video_data["items"][0]["snippet"]["description"],
                                             "channel_id": video_data["items"][0]["snippet"]["channelId"],
-                                            "channel_name": video_data["items"][0]["snippet"]["channel_ID"],
+                                            "channel_name": video_data["items"][0]["snippet"]["channelTitle"],
                                             }
             channel_api_url = ('https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet,contentDetails&key=%s' %
                                (self.video_records[id]["channel_id"], str(self.config["youtube"]["api_key"])))
@@ -87,7 +88,7 @@ class proxyserviceFetcher():
                    ("http://",
                     base_url,
                     watchtype,
-                    c['number']
+                    c['id']
                     ))
             station_list.append(
                                 {
@@ -101,11 +102,19 @@ class proxyserviceFetcher():
         total_channels = 1
         return total_channels
 
+    def get_channel_stream(self, id):
+        self.check_service_dict(id)
+        if self.video_records[id]["stream"]:
+            return self.video_records[id]["stream"]
+        pafyobj = pafy.new(id)
+        self.video_records[id]["stream"] = str(pafyobj.getbest().url)
+        return self.video_records[id]["stream"]
+
     def get_channel_streams(self):
         streamdict = {}
         for c in self.get_channels():
             self.check_service_dict(c["id"])
-            streamdict[str(c["number"])] = self.video_records[c["id"]]["stream"]
+            streamdict[str(c["number"])] = self.get_channel_stream(c["id"])
         return streamdict
 
     def get_channel_thumbnail(self, content_id):
