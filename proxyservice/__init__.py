@@ -28,7 +28,7 @@ class proxyserviceFetcher():
                 epg_cache = json.load(epgfile)
         return epg_cache
 
-    def check_youtube_dict(self, id):
+    def check_service_dict(self, id):
         if id not in list(self.video_records.keys()):
 
             video_api_url = ('https://www.googleapis.com/youtube/v3/videos?id=%s&part=snippet,contentDetails&key=%s' %
@@ -65,7 +65,7 @@ class proxyserviceFetcher():
                     if channel_key in list(self.config[station]):
                         station_item[channel_key] = str(self.config[station][channel_key])
             if "number" in list(station_item.keys()) and "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
-                self.check_youtube_dict(station_item["videoid"])
+                self.check_service_dict(station_item["videoid"])
                 clean_station_item = {
                                      "name": station_item["name"],
                                      "callsign": self.video_records[station_item["videoid"]]["channel_name"],
@@ -104,14 +104,14 @@ class proxyserviceFetcher():
     def get_channel_streams(self):
         streamdict = {}
         for c in self.get_channels():
-            self.check_youtube_dict(c["id"])
+            self.check_service_dict(c["id"])
             streamdict[str(c["number"])] = self.video_records[c["id"]]["stream"]
         return streamdict
 
     def get_channel_thumbnail(self, content_id):
         for c in self.get_channels():
             if c["id"] == content_id:
-                self.check_youtube_dict(c["id"])
+                self.check_service_dict(c["id"])
                 return self.video_records[content_id]["channel_thumbnail"]
 
     def get_content_thumbnail(self, content_id):
@@ -142,7 +142,7 @@ class proxyserviceFetcher():
 
         for c in self.get_channels():
 
-            self.check_youtube_dict(c["id"])
+            self.check_service_dict(c["id"])
 
             if str(c["number"]) not in list(programguide.keys()):
                 programguide[str(c["number"])] = {
