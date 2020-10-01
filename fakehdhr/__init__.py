@@ -306,7 +306,7 @@ class HDHR_HTTP_Server():
                             ffmpeg_proc.communicate()
                             print("Connection Closed.")
 
-                    return Response(stream_with_context(generate()), mimetype="audio/mpeg")
+                    return Response(stream_with_context(generate()), mimetype="video/mpeg")
         abort(404)
 
     @app.route('/lineup.post', methods=['POST'])
