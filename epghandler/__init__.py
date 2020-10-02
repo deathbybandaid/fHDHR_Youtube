@@ -2,10 +2,9 @@ import os
 import sys
 import time
 from io import BytesIO
-import json
 import xml.etree.ElementTree as ET
 
-from . import emptyepg
+from . import epgtypes
 
 
 def sub_el(parent, name, text=None, **kwargs):
@@ -25,37 +24,20 @@ class EPGhandler():
 
     def __init__(self, config, serviceproxy):
         self.config = config.config
-        self.serviceproxy = serviceproxy
-        self.emptyepg = emptyepg.EmptyEPG(config)
-
-        self.epg_cache = None
-
-    def get_epg(self):
-        if self.config["fakehdhr"]["epg_method"] == "empty":
-            epgdict = self.emptyepg.EmptyEPG()
-        elif self.config["fakehdhr"]["epg_method"] == "proxy":
-            epgdict = self.serviceproxy.epg_cache_open()
-        return epgdict
-
-    def epg_cache_open(self):
-        epg_cache = None
-        if os.path.isfile(self.empty_cache_file):
-            with open(self.empty_cache_file, 'r') as epgfile:
-                epg_cache = json.load(epgfile)
-        return epg_cache
+        self.epgtypes = epgtypes.EPGTypes(config, serviceproxy)
 
     def get_xmltv(self, base_url):
-        epgdict = self.get_epg()
+        epgdict = self.epgtypes.get_epg()
         if not epgdict:
             return self.dummyxml()
 
         epg_method = self.config["fakehdhr"]["epg_method"]
 
         out = ET.Element('tv')
-        out.set('source-info-url', 'Youtube')
-        out.set('source-info-name', 'Youtube')
+        out.set('source-info-url', self.config["fakehdhr"]["friendlyname"])
+        out.set('source-info-name', self.config["main"]["servicename"])
         out.set('generator-info-name', 'FAKEHDHR')
-        out.set('generator-info-url', 'FAKEHDHR/FakeHDHR_Youtube')
+        out.set('generator-info-url', 'FAKEHDHR/' + self.config["main"]["reponame"])
 
         for c in list(epgdict.keys()):
 
@@ -72,14 +54,10 @@ class EPGhandler():
             sub_el(c_out, 'display-name', text=epgdict[c]['name'])
 
             if epgdict[c]["thumbnail"] is not None:
-                if epg_method == "empty":
-                    sub_el(c_out, 'icon', src=("http://" + str(base_url) + str(epgdict[c]['thumbnail'])))
-                elif epg_method == "proxy":
-                    sub_el(c_out, 'icon', src=(str(epgdict[c]['thumbnail'])))
-                else:
-                    sub_el(c_out, 'icon', src=(str(epgdict[c]['thumbnail'])))
+                channel_thumbnail = self.epgtypes.thumb_url(epg_method, "channel", base_url, str(epgdict[c]['thumbnail']))
+                sub_el(c_out, 'icon', src=(str(channel_thumbnail)))
             else:
-                sub_el(c_out, 'icon', src=("http://" + str(base_url) + "/images?source=empty&type=channel&id=empty"))
+                sub_el(c_out, 'icon', src=("http://" + str(base_url) + "/images?source=empty&type=channel&id=" + c['number']))
 
         for progitem in list(epgdict.keys()):
 
@@ -117,14 +95,10 @@ class EPGhandler():
                            text='S%02dE%02d' % (s_, e_))
 
                 if program["thumbnail"] is not None:
-                    if epg_method == "empty":
-                        sub_el(prog_out, 'icon', src=("http://" + str(base_url) + str(program['thumbnail'])))
-                    elif epg_method == "proxy":
-                        sub_el(prog_out, 'icon', src=(str(program['thumbnail'])))
-                    else:
-                        sub_el(prog_out, 'icon', src=(str(program['thumbnail'])))
+                    content_thumbnail = self.epgtypes.thumb_url(epg_method, "content", base_url, str(epgdict[c]['thumbnail']))
+                    sub_el(prog_out, 'icon', src=(str(content_thumbnail)))
                 else:
-                    sub_el(prog_out, 'icon', src=("http://" + str(base_url) + "/images?source=empty&type=content&id=empty"))
+                    sub_el(prog_out, 'icon', src=("http://" + str(base_url) + "/images?source=empty&type=content&id=" + program['title']))
 
                 if program['rating']:
                     rating_out = sub_el(prog_out, 'rating', system="MPAA")
@@ -140,36 +114,25 @@ class EPGhandler():
 
     def dummyxml(self):
         out = ET.Element('tv')
-        out.set('source-info-url', 'Youtube')
-        out.set('source-info-name', 'Youtube')
+        out.set('source-info-url', self.config["fakehdhr"]["friendlyname"])
+        out.set('source-info-name', self.config["main"]["servicename"])
         out.set('generator-info-name', 'FAKEHDHR')
-        out.set('generator-info-url', 'FAKEHDHR/FakeHDHR_Youtube')
+        out.set('generator-info-url', 'FAKEHDHR/' + self.config["main"]["reponame"])
 
         fakefile = BytesIO()
         fakefile.write(b'<?xml version="1.0" encoding="UTF-8"?>\n')
         fakefile.write(ET.tostring(out, encoding='UTF-8'))
         return fakefile.getvalue()
 
-    def update(self):
-        if self.config["fakehdhr"]["epg_method"] == "empty":
-            self.emptyepg.update_epg()
-        elif self.config["fakehdhr"]["epg_method"] == "proxy":
-            self.serviceproxy.update_epg()
-
 
 def epgServerProcess(config, epghandling):
 
-    if config.config["fakehdhr"]["epg_method"] == "empty":
-        sleeptime = config.config["main"]["empty_epg_update_frequency"]
-    elif config.config["fakehdhr"]["epg_method"] == "proxy":
-        sleeptime = config.config["youtube"]["epg_update_frequency"]
-    elif config.config["fakehdhr"]["epg_method"] == "zap2it":
-        sleeptime = config.config["zap2xml"]["epg_update_frequency"]
+    sleeptime = int(config.config[config.config["fakehdhr"]["epg_method"]]["epg_update_frequency"])
 
     try:
 
         while True:
-            epghandling.update()
+            epghandling.epgtypes.update()
             time.sleep(sleeptime)
 
     except KeyboardInterrupt:
