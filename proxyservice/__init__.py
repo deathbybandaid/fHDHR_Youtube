@@ -11,15 +11,13 @@ class proxyserviceFetcher():
 
         self.config = config.config
 
-        self.servicename = "fHDHR-Youtube"
-
         self.urls = {}
         self.url_assembler()
 
         self.video_records = {}
 
         self.epg_cache = None
-        self.epg_cache_file = config.config["youtube"]["epg_cache"]
+        self.epg_cache_file = config.config["proxy"]["epg_cache"]
         self.epg_cache = self.epg_cache_open()
 
     def epg_cache_open(self):
@@ -29,11 +27,17 @@ class proxyserviceFetcher():
                 epg_cache = json.load(epgfile)
         return epg_cache
 
+    def thumb_url(self, thumb_type, base_url, thumbnail):
+        if thumb_type == "channel":
+            return thumbnail
+        elif thumb_type == "content":
+            return thumbnail
+
     def check_service_dict(self, id):
         if id not in list(self.video_records.keys()):
 
             video_api_url = ('https://www.googleapis.com/youtube/v3/videos?id=%s&part=snippet,contentDetails&key=%s' %
-                             (id, str(self.config["youtube"]["api_key"])))
+                             (id, str(self.config["proxy"]["api_key"])))
             video_response = urllib.request.urlopen(video_api_url)
             video_data = json.load(video_response)
 
@@ -45,7 +49,7 @@ class proxyserviceFetcher():
                                             "channel_name": video_data["items"][0]["snippet"]["channelTitle"],
                                             }
             channel_api_url = ('https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet,contentDetails&key=%s' %
-                               (self.video_records[id]["channel_id"], str(self.config["youtube"]["api_key"])))
+                               (self.video_records[id]["channel_id"], str(self.config["proxy"]["api_key"])))
             channel_response = urllib.request.urlopen(channel_api_url)
             channel_data = json.load(channel_response)
 
@@ -57,7 +61,7 @@ class proxyserviceFetcher():
         pass
 
     def get_channels(self):
-        channel_list = self.config['youtube']["streams"].split(",")
+        channel_list = self.config['proxy']["streams"].split(",")
         station_list = []
         for station in channel_list:
             station_item = {}
