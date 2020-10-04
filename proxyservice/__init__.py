@@ -9,7 +9,7 @@ class proxyserviceFetcher():
 
     def __init__(self, config):
 
-        self.config = config.config
+        self.config = config.copy()
 
         self.urls = {}
         self.url_assembler()
@@ -17,7 +17,7 @@ class proxyserviceFetcher():
         self.video_records = {}
 
         self.epg_cache = None
-        self.epg_cache_file = config.config["proxy"]["epg_cache"]
+        self.epg_cache_file = self.config["proxy"]["epg_cache"]
         self.epg_cache = self.epg_cache_open()
 
     def epg_cache_open(self):
