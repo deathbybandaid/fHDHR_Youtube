@@ -1,43 +1,27 @@
-import os
-import json
+import pafy
 import datetime
 import urllib.request
-import pafy
+import json
+
+import fHDHR.tools
 
 
-class proxyserviceFetcher():
+class fHDHRservice():
+    def __init__(self, settings):
+        self.config = settings
 
-    def __init__(self, config):
-
-        self.config = config.copy()
-
-        self.urls = {}
-        self.url_assembler()
+        self.web = fHDHR.tools.WebReq()
 
         self.video_records = {}
 
-        self.epg_cache = None
-        self.epg_cache_file = self.config["proxy"]["epg_cache"]
-        self.epg_cache = self.epg_cache_open()
-
-    def epg_cache_open(self):
-        epg_cache = None
-        if os.path.isfile(self.epg_cache_file):
-            with open(self.epg_cache_file, 'r') as epgfile:
-                epg_cache = json.load(epgfile)
-        return epg_cache
-
-    def thumb_url(self, thumb_type, base_url, thumbnail):
-        if thumb_type == "channel":
-            return thumbnail
-        elif thumb_type == "content":
-            return thumbnail
+    def login(self):
+        return True
 
     def check_service_dict(self, id):
         if id not in list(self.video_records.keys()):
 
             video_api_url = ('https://www.googleapis.com/youtube/v3/videos?id=%s&part=snippet,contentDetails&key=%s' %
-                             (id, str(self.config["proxy"]["api_key"])))
+                             (id, str(self.config.dict["origin"]["api_key"])))
             video_response = urllib.request.urlopen(video_api_url)
             video_data = json.load(video_response)
 
@@ -49,7 +33,7 @@ class proxyserviceFetcher():
                                             "channel_name": video_data["items"][0]["snippet"]["channelTitle"],
                                             }
             channel_api_url = ('https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet,contentDetails&key=%s' %
-                               (self.video_records[id]["channel_id"], str(self.config["proxy"]["api_key"])))
+                               (self.video_records[id]["channel_id"], str(self.config.dict["origin"]["api_key"])))
             channel_response = urllib.request.urlopen(channel_api_url)
             channel_data = json.load(channel_response)
 
@@ -57,18 +41,17 @@ class proxyserviceFetcher():
 
         return self.video_records[id]
 
-    def url_assembler(self):
-        pass
-
-    def get_channels(self):
-        channel_list = self.config['proxy']["streams"].split(",")
+    def stations_from_config(self):
+        channel_list = self.config.dict['origin']["streams"]
+        if isinstance(channel_list, str):
+            channel_list = [channel_list]
         station_list = []
         for station in channel_list:
             station_item = {}
-            if station in list(self.config.keys()):
+            if station in list(self.config.dict.keys()):
                 for channel_key in ["number", "name", "videoid"]:
-                    if channel_key in list(self.config[station]):
-                        station_item[channel_key] = str(self.config[station][channel_key])
+                    if channel_key in list(self.config.dict[station]):
+                        station_item[channel_key] = str(self.config.dict[station][channel_key])
             if "number" in list(station_item.keys()) and "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
                 self.check_service_dict(station_item["videoid"])
                 clean_station_item = {
@@ -80,46 +63,36 @@ class proxyserviceFetcher():
                 station_list.append(clean_station_item)
         return station_list
 
-    def get_station_list(self, base_url):
+    def get_channels(self):
+        channel_list = self.config.dict['origin']["streams"]
+        if isinstance(channel_list, str):
+            channel_list = [channel_list]
         station_list = []
-
-        for c in self.get_channels():
-            if self.config["fakehdhr"]["stream_type"] == "ffmpeg":
-                watchtype = "ffmpeg"
-            else:
-                watchtype = "direct"
-            url = ('%s%s/watch?method=%s&channel=%s' %
-                   ("http://",
-                    base_url,
-                    watchtype,
-                    c['id']
-                    ))
-            station_list.append(
-                                {
-                                 'GuideNumber': str(c['number']),
-                                 'GuideName': c['name'],
-                                 'URL': url
-                                })
+        for station in channel_list:
+            station_item = {}
+            if station in list(self.config.dict.keys()):
+                for channel_key in ["number", "name", "videoid"]:
+                    if channel_key in list(self.config.dict[station]):
+                        station_item[channel_key] = str(self.config.dict[station][channel_key])
+            if "number" in list(station_item.keys()) and "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
+                self.check_service_dict(station_item["videoid"])
+                clean_station_item = {
+                                     "name": station_item["name"],
+                                     "callsign": self.video_records[station_item["videoid"]]["channel_name"],
+                                     "number": station_item["number"],
+                                     "id": station_item["videoid"],
+                                     }
+                station_list.append(clean_station_item)
         return station_list
 
-    def get_station_total(self):
-        total_channels = 1
-        return total_channels
-
-    def get_channel_stream(self, id):
-        self.check_service_dict(id)
-        if self.video_records[id]["stream"]:
-            return self.video_records[id]["stream"]
-        pafyobj = pafy.new(id)
-        self.video_records[id]["stream"] = str(pafyobj.getbest().url)
-        return self.video_records[id]["stream"]
-
-    def get_channel_streams(self):
+    def get_channel_stream(self, chandict, allchandict):
+        caching = True
+        streamlist = []
         streamdict = {}
-        for c in self.get_channels():
-            self.check_service_dict(c["id"])
-            streamdict[str(c["number"])] = self.get_channel_stream(c["id"])
-        return streamdict
+        pafyobj = pafy.new(id)
+        streamdict = {"number": chandict["number"], "stream_url": str(pafyobj.getbest().url)}
+        streamlist.append(streamdict)
+        return streamlist, caching
 
     def get_channel_thumbnail(self, content_id):
         for c in self.get_channels():
@@ -131,7 +104,6 @@ class proxyserviceFetcher():
         return ("https://i.ytimg.com/vi/%s/maxresdefault.jpg" % (str(content_id)))
 
     def update_epg(self):
-        print('Updating Youtube EPG cache file.')
 
         programguide = {}
 
@@ -188,8 +160,4 @@ class proxyserviceFetcher():
 
                 programguide[str(c["number"])]["listing"].append(clean_prog_dict)
 
-        self.epg_cache = programguide
-        with open(self.epg_cache_file, 'w') as epgfile:
-            epgfile.write(json.dumps(programguide, indent=4))
-        print('Wrote updated Youtube EPG cache file.')
         return programguide
