@@ -1,8 +1,9 @@
-# FakeHDHR_Youtube
+# fHDHR_Youtube
 
 
 Welcome to the world of streaming to Plex! We use some fancy python here to achieve a system of:
 
+**f**un
 **H**ome
 **D**istribution
 **H**iatus
