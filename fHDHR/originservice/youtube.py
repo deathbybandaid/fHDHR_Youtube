@@ -17,15 +17,15 @@ class fHDHRservice():
     def login(self):
         return True
 
-    def check_service_dict(self, id):
-        if id not in list(self.video_records.keys()):
+    def check_service_dict(self, videoid):
+        if videoid not in list(self.video_records.keys()):
 
             video_api_url = ('https://www.googleapis.com/youtube/v3/videos?id=%s&part=snippet,contentDetails&key=%s' %
-                             (id, str(self.config.dict["origin"]["api_key"])))
+                             (videoid, str(self.config.dict["origin"]["api_key"])))
             video_response = urllib.request.urlopen(video_api_url)
             video_data = json.load(video_response)
 
-            self.video_records[id] = {
+            self.video_records[videoid] = {
                                             "stream": None,
                                             "title": video_data["items"][0]["snippet"]["title"],
                                             "description": video_data["items"][0]["snippet"]["description"],
@@ -33,13 +33,13 @@ class fHDHRservice():
                                             "channel_name": video_data["items"][0]["snippet"]["channelTitle"],
                                             }
             channel_api_url = ('https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet,contentDetails&key=%s' %
-                               (self.video_records[id]["channel_id"], str(self.config.dict["origin"]["api_key"])))
+                               (self.video_records[videoid]["channel_id"], str(self.config.dict["origin"]["api_key"])))
             channel_response = urllib.request.urlopen(channel_api_url)
             channel_data = json.load(channel_response)
 
-            self.video_records[id]["channel_thumbnail"] = channel_data["items"][0]["snippet"]["thumbnails"]["high"]["url"]
+            self.video_records[videoid]["channel_thumbnail"] = channel_data["items"][0]["snippet"]["thumbnails"]["high"]["url"]
 
-        return self.video_records[id]
+        return self.video_records[videoid]
 
     def stations_from_config(self):
         channel_list = self.config.dict['origin']["streams"]
@@ -58,7 +58,7 @@ class fHDHRservice():
                                      "name": station_item["name"],
                                      "callsign": self.video_records[station_item["videoid"]]["channel_name"],
                                      "number": station_item["number"],
-                                     "id": station_item["videoid"],
+                                     "id": self.video_records[station_item["videoid"]]["channel_id"],
                                      }
                 station_list.append(clean_station_item)
         return station_list
@@ -89,7 +89,7 @@ class fHDHRservice():
         caching = True
         streamlist = []
         streamdict = {}
-        pafyobj = pafy.new(id)
+        pafyobj = pafy.new(chandict["id"])
         streamdict = {"number": chandict["number"], "stream_url": str(pafyobj.getbest().url)}
         streamlist.append(streamdict)
         return streamlist, caching
