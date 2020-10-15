@@ -43,11 +43,13 @@ class fHDHRservice():
 
     def load_channel_list(self):
         if os.path.isfile(self.channel_guide_file):
+            print("Loading Previously Saved Channel Number Guide.")
             with open(self.channel_guide_file, 'r') as cguidefile:
                 self.cguide = json.load(cguidefile)
             return
 
     def save_channel_list(self):
+        print("Saving Channel Number Guide.")
         with open(self.channel_guide_file, 'w') as cguidefile:
             cguidefile.write(json.dumps(self.cguide, indent=4))
 
