@@ -35,8 +35,8 @@ class fHDHRservice():
 
         for i in range(1, 1000):
             if str(float(i)) not in used_numbers:
-                self.cguide[channel_name] = str(float(i))
-                return self.cguide[channel_name]
+                break
+        return str(float(i))
 
     def set_number(self, channel_name, channel_number):
         self.cguide[channel_name] = str(float(channel_number))
@@ -46,7 +46,8 @@ class fHDHRservice():
             print("Loading Previously Saved Channel Number Guide.")
             with open(self.channel_guide_file, 'r') as cguidefile:
                 self.cguide = json.load(cguidefile)
-            return
+        len(self.get_channels())
+        self.save_channel_list()
 
     def save_channel_list(self):
         print("Saving Channel Number Guide.")
@@ -90,13 +91,13 @@ class fHDHRservice():
                         station_item[channel_key] = str(self.config.dict[station][channel_key])
                 if "number" not in list(station_item.keys()):
                     station_item["number"] = None
-                else:
-                    self.set_number(station_item["name"], station_item["number"])
-                    station_item["number"] = str(float(station_item["number"]))
 
-            if "number" in list(station_item.keys()) and "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
+            if "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
                 if not station_item["number"]:
                     station_item["number"] = self.get_number(station_item["name"])
+                else:
+                    station_item["number"] = str(float(station_item["number"]))
+                self.set_number(station_item["name"], station_item["number"])
                 self.check_service_dict(station_item["videoid"])
                 clean_station_item = {
                                      "name": station_item["name"],
