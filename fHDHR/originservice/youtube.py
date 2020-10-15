@@ -175,7 +175,7 @@ class fHDHRservice():
                                     "seasonnumber": None,
                                     "episodenumber": None,
                                     "isnew": False,
-                                    "id": timestamp['time_start'],
+                                    "id": str(c["id"]) + "_" + str(timestamp['time_start']),
                                     }
 
                 programguide[str(c["number"])]["listing"].append(clean_prog_dict)
