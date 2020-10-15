@@ -1,3 +1,5 @@
+import os
+import pathlib
 import pafy
 import datetime
 import urllib.request
@@ -14,8 +16,40 @@ class fHDHRservice():
 
         self.video_records = {}
 
+        self.cache_dir = self.config.dict["filedir"]["epg_cache"]["origin"]["top"]
+        self.channel_guide_file = pathlib.Path(self.cache_dir).joinpath('cguide.json')
+
+        self.cguide = {}
+        self.load_channel_list()
+
     def login(self):
         return True
+
+    def get_number(self, channel_name):
+        if channel_name in list(self.cguide.keys()):
+            return self.cguide[channel_name]
+
+        used_numbers = []
+        for channel_name in list(self.cguide.keys()):
+            used_numbers.append(self.cguide[channel_name])
+
+        for i in range(1, 1000):
+            if str(float(i)) not in used_numbers:
+                self.cguide[channel_name] = str(float(i))
+                return self.cguide[channel_name]
+
+    def set_number(self, channel_name, channel_number):
+        self.cguide[channel_name] = str(float(channel_number))
+
+    def load_channel_list(self):
+        if os.path.isfile(self.channel_guide_file):
+            with open(self.channel_guide_file, 'r') as cguidefile:
+                self.cguide = json.load(cguidefile)
+            return
+
+    def save_channel_list(self):
+        with open(self.channel_guide_file, 'w') as cguidefile:
+            cguidefile.write(json.dumps(self.cguide, indent=4))
 
     def check_service_dict(self, videoid):
         if videoid not in list(self.video_records.keys()):
@@ -41,28 +75,6 @@ class fHDHRservice():
 
         return self.video_records[videoid]
 
-    def stations_from_config(self):
-        channel_list = self.config.dict['origin']["streams"]
-        if isinstance(channel_list, str):
-            channel_list = [channel_list]
-        station_list = []
-        for station in channel_list:
-            station_item = {}
-            if station in list(self.config.dict.keys()):
-                for channel_key in ["number", "name", "videoid"]:
-                    if channel_key in list(self.config.dict[station]):
-                        station_item[channel_key] = str(self.config.dict[station][channel_key])
-            if "number" in list(station_item.keys()) and "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
-                self.check_service_dict(station_item["videoid"])
-                clean_station_item = {
-                                     "name": station_item["name"],
-                                     "callsign": self.video_records[station_item["videoid"]]["channel_name"],
-                                     "number": station_item["number"],
-                                     "id": self.video_records[station_item["videoid"]]["channel_id"],
-                                     }
-                station_list.append(clean_station_item)
-        return station_list
-
     def get_channels(self):
         channel_list = self.config.dict['origin']["streams"]
         if isinstance(channel_list, str):
@@ -74,7 +86,15 @@ class fHDHRservice():
                 for channel_key in ["number", "name", "videoid"]:
                     if channel_key in list(self.config.dict[station]):
                         station_item[channel_key] = str(self.config.dict[station][channel_key])
+                if "number" not in list(station_item.keys()):
+                    station_item["number"] = None
+                else:
+                    self.set_number(station_item["name"], station_item["number"])
+                    station_item["number"] = str(float(station_item["number"]))
+
             if "number" in list(station_item.keys()) and "name" in list(station_item.keys()) and "videoid" in list(station_item.keys()):
+                if not station_item["number"]:
+                    station_item["number"] = self.get_number(station_item["name"])
                 self.check_service_dict(station_item["videoid"])
                 clean_station_item = {
                                      "name": station_item["name"],
