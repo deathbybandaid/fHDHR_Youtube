@@ -15,6 +15,10 @@ class OriginService():
 
         self.video_reference = {}
 
+    def get_status_dict(self):
+        ret_status_dict = {}
+        return ret_status_dict
+
     def get_channels(self):
 
         conf_channel_list = self.config.dict['origin']["streams"]
