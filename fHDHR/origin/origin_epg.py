@@ -2,46 +2,31 @@ import datetime
 import json
 import urllib.request
 
-import fHDHR.tools
 
+class OriginEPG():
 
-class originEPG():
-
-    def __init__(self, settings, channels):
+    def __init__(self, settings, logger, web):
         self.config = settings
-        self.channels = channels
+        self.logger = logger
+        self.web = web
 
-        self.web = fHDHR.tools.WebReq()
+    def get_channel_thumbnail(self, videoid, fhdhr_channels):
+        if "channel_thumbnail" not in list(fhdhr_channels.origin.video_reference[videoid].keys()):
 
-        self.base_api_url = 'https://api.pluto.tv'
-        self.web_cache_dir = self.config.dict["filedir"]["epg_cache"]["origin"]["web_cache"]
-
-    def xmltimestamp_pluto(self, inputtime):
-        xmltime = inputtime.replace('Z', '+00:00')
-        xmltime = datetime.datetime.fromisoformat(xmltime)
-        xmltime = xmltime.strftime('%Y%m%d%H%M%S %z')
-        return xmltime
-
-    def duration_pluto_minutes(self, induration):
-        return ((int(induration))/1000/60)
-
-    def get_channel_thumbnail(self, videoid):
-        if "channel_thumbnail" not in list(self.channels.origin.video_reference[videoid].keys()):
-
-            channel_id = self.channels.origin.video_reference[videoid]["channel_id"]
+            channel_id = fhdhr_channels.origin.video_reference[videoid]["channel_id"]
             channel_api_url = ('https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet,contentDetails&key=%s' %
                                (channel_id, str(self.config.dict["origin"]["api_key"])))
             channel_response = urllib.request.urlopen(channel_api_url)
             channel_data = json.load(channel_response)
 
-            self.channels.origin.video_reference[videoid]["channel_thumbnail"] = channel_data["items"][0]["snippet"]["thumbnails"]["high"]["url"]
+            fhdhr_channels.origin.video_reference[videoid]["channel_thumbnail"] = channel_data["items"][0]["snippet"]["thumbnails"]["high"]["url"]
 
-        return self.channels.origin.video_reference[videoid]["channel_thumbnail"]
+        return fhdhr_channels.origin.video_reference[videoid]["channel_thumbnail"]
 
     def get_content_thumbnail(self, content_id):
         return ("https://i.ytimg.com/vi/%s/maxresdefault.jpg" % (str(content_id)))
 
-    def update_epg(self):
+    def update_epg(self, fhdhr_channels):
         programguide = {}
 
         timestamps = []
@@ -56,7 +41,7 @@ class originEPG():
             xtime = xtime + datetime.timedelta(hours=1)
             timestamps.append(timestampdict)
 
-        for c in self.channels.get_channels():
+        for c in fhdhr_channels.get_channels():
 
             if str(c["number"]) not in list(programguide.keys()):
                 programguide[str(c["number"])] = {
@@ -64,7 +49,7 @@ class originEPG():
                                                     "name": c["name"],
                                                     "number": c["number"],
                                                     "id": c["id"],
-                                                    "thumbnail": self.get_channel_thumbnail(c["id"]),
+                                                    "thumbnail": self.get_channel_thumbnail(c["id"], fhdhr_channels),
                                                     "listing": [],
                                                     }
 
@@ -74,9 +59,9 @@ class originEPG():
                                     "time_end": timestamp['time_end'],
                                     "duration_minutes": 60,
                                     "thumbnail": self.get_content_thumbnail(c["id"]),
-                                    "title": self.channels.origin.video_reference[c["id"]]["title"],
+                                    "title": fhdhr_channels.origin.video_reference[c["id"]]["title"],
                                     "sub-title": "Unavailable",
-                                    "description": self.channels.origin.video_reference[c["id"]]["description"],
+                                    "description": fhdhr_channels.origin.video_reference[c["id"]]["description"],
                                     "rating": "N/A",
                                     "episodetitle": None,
                                     "releaseyear": None,
