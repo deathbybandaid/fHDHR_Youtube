@@ -3,21 +3,16 @@ import urllib.request
 import urllib.parse
 import pafy
 
-import fHDHR.tools
 
+class OriginChannels():
 
-class OriginService():
-
-    def __init__(self, settings):
+    def __init__(self, settings, origin, logger, web):
         self.config = settings
-
-        self.web = fHDHR.tools.WebReq()
+        self.origin = origin
+        self.logger = logger
+        self.web = web
 
         self.video_reference = {}
-
-    def get_status_dict(self):
-        ret_status_dict = {}
-        return ret_status_dict
 
     def get_channels(self):
 
