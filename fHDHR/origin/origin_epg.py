@@ -5,10 +5,8 @@ import urllib.request
 
 class OriginEPG():
 
-    def __init__(self, settings, logger, web):
-        self.config = settings
-        self.logger = logger
-        self.web = web
+    def __init__(self, fhdhr):
+        self.fhdhr = fhdhr
 
     def get_channel_thumbnail(self, videoid, fhdhr_channels):
         if "channel_thumbnail" not in list(fhdhr_channels.origin.video_reference[videoid].keys()):
