@@ -4,3 +4,5 @@ flask
 image
 pafy
 sqlalchemy
+pycrypto
+m3u8
