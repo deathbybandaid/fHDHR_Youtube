@@ -46,8 +46,8 @@ class OriginEPG():
                                                     "callsign": c["callsign"] or c["name"],
                                                     "name": c["name"],
                                                     "number": c["number"],
-                                                    "id": c["id"],
-                                                    "thumbnail": self.get_channel_thumbnail(c["id"], fhdhr_channels),
+                                                    "id": c["origin_id"],
+                                                    "thumbnail": self.get_channel_thumbnail(c["origin_id"], fhdhr_channels),
                                                     "listing": [],
                                                     }
 
@@ -56,10 +56,10 @@ class OriginEPG():
                                     "time_start": timestamp['time_start'],
                                     "time_end": timestamp['time_end'],
                                     "duration_minutes": 60,
-                                    "thumbnail": self.get_content_thumbnail(c["id"]),
-                                    "title": fhdhr_channels.origin.video_reference[c["id"]]["title"],
+                                    "thumbnail": self.get_content_thumbnail(c["origin_id"]),
+                                    "title": fhdhr_channels.origin.video_reference[c["origin_id"]]["title"],
                                     "sub-title": "Unavailable",
-                                    "description": fhdhr_channels.origin.video_reference[c["id"]]["description"],
+                                    "description": fhdhr_channels.origin.video_reference[c["origin_id"]]["description"],
                                     "rating": "N/A",
                                     "episodetitle": None,
                                     "releaseyear": None,
@@ -67,7 +67,7 @@ class OriginEPG():
                                     "seasonnumber": None,
                                     "episodenumber": None,
                                     "isnew": False,
-                                    "id": str(c["id"]) + "_" + str(timestamp['time_start']).split(" ")[0],
+                                    "id": str(c["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0],
                                     }
 
                 programguide[str(c["number"])]["listing"].append(clean_prog_dict)
