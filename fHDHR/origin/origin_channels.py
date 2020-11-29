@@ -12,6 +12,19 @@ class OriginChannels():
 
         self.video_reference = {}
 
+    def get_channel_thumbnail(self, videoid):
+        if "channel_thumbnail" not in list(self.video_reference[videoid].keys()):
+
+            channel_id = self.video_reference[videoid]["channel_id"]
+            channel_api_url = ('https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet,contentDetails&key=%s' %
+                               (channel_id, str(self.config.dict["origin"]["api_key"])))
+            channel_response = urllib.request.urlopen(channel_api_url)
+            channel_data = json.load(channel_response)
+
+            self.video_reference[videoid]["channel_thumbnail"] = channel_data["items"][0]["snippet"]["thumbnails"]["high"]["url"]
+
+        return self.video_reference[videoid]["channel_thumbnail"]
+
     def get_channels(self):
 
         conf_channel_list = self.config.dict['origin']["streams"]
@@ -44,6 +57,7 @@ class OriginChannels():
                                     "name": station_item["name"],
                                     "callsign": self.video_reference[station_item["videoid"]]["channel_name"],
                                     "id": station_item["videoid"],
+                                    "thumbnail": self.get_channel_thumbnail(station_item["videoid"])
                                     }
             if "number" in list(station_item.keys()):
                 clean_station_item["number"] = float(station_item["number"])
