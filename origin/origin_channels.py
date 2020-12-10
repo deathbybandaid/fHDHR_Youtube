@@ -60,7 +60,7 @@ class OriginChannels():
                                     "thumbnail": self.get_channel_thumbnail(station_item["videoid"])
                                     }
             if "number" in list(station_item.keys()):
-                clean_station_item["number"] = float(station_item["number"])
+                clean_station_item["number"] = station_item["number"]
 
             channel_list.append(clean_station_item)
 
