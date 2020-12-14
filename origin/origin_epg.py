@@ -18,8 +18,8 @@ class OriginEPG():
         xtime = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         while xtime <= xtimeend:
             timestampdict = {
-                            "time_start": str(xtime.strftime('%Y%m%d%H%M%S')) + " +0000",
-                            "time_end": str((xtime + datetime.timedelta(hours=1)).strftime('%Y%m%d%H%M%S')) + " +0000",
+                            "time_start": xtime.timestamp(),
+                            "time_end": (xtime + datetime.timedelta(hours=1)).timestamp(),
                             }
             xtime = xtime + datetime.timedelta(hours=1)
             timestamps.append(timestampdict)
