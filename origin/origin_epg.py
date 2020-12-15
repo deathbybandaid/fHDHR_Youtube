@@ -27,8 +27,8 @@ class OriginEPG():
         for fhdhr_id in list(fhdhr_channels.list.keys()):
             chan_obj = fhdhr_channels.list[fhdhr_id]
 
-            if str(chan_obj.dict["number"]) not in list(programguide.keys()):
-                programguide[str(chan_obj.dict["number"])] = chan_obj.epgdict
+            if str(chan_obj.number) not in list(programguide.keys()):
+                programguide[str(chan_obj.number)] = chan_obj.epgdict
 
             for timestamp in timestamps:
                 clean_prog_dict = {
@@ -49,7 +49,7 @@ class OriginEPG():
                                     "id": str(chan_obj.dict["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0],
                                     }
 
-                if not any(d['id'] == clean_prog_dict['id'] for d in programguide[str(chan_obj.dict["number"])]["listing"]):
-                    programguide[str(chan_obj.dict["number"])]["listing"].append(clean_prog_dict)
+                if not any(d['id'] == clean_prog_dict['id'] for d in programguide[str(chan_obj.number)]["listing"]):
+                    programguide[str(chan_obj.number)]["listing"].append(clean_prog_dict)
 
         return programguide
