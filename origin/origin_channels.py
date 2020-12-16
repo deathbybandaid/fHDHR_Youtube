@@ -17,7 +17,7 @@ class OriginChannels():
 
             channel_id = self.video_reference[videoid]["channel_id"]
             channel_api_url = ('https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet,contentDetails&key=%s' %
-                               (channel_id, str(self.config.dict["origin"]["api_key"])))
+                               (channel_id, str(self.fhdhr.config.dict["origin"]["api_key"])))
             channel_response = urllib.request.urlopen(channel_api_url)
             channel_data = json.load(channel_response)
 
@@ -27,7 +27,7 @@ class OriginChannels():
 
     def get_channels(self):
 
-        conf_channel_list = self.config.dict['origin']["streams"]
+        conf_channel_list = self.fhdhr.config.dict['origin']["streams"]
         if isinstance(conf_channel_list, str):
             conf_channel_list = [conf_channel_list]
 
@@ -35,16 +35,16 @@ class OriginChannels():
         for station in conf_channel_list:
 
             station_item = {}
-            if station in list(self.config.dict.keys()):
+            if station in list(self.fhdhr.config.dict.keys()):
                 for channel_key in ["number", "name", "videoid"]:
-                    if channel_key in list(self.config.dict[station]):
-                        station_item[channel_key] = str(self.config.dict[station][channel_key])
+                    if channel_key in list(self.fhdhr.config.dict[station]):
+                        station_item[channel_key] = str(self.fhdhr.config.dict[station][channel_key])
 
             if station_item["videoid"] not in list(self.video_reference.keys()):
                 self.video_reference[station_item["videoid"]] = {}
 
             video_api_url = ('https://www.googleapis.com/youtube/v3/videos?id=%s&part=snippet,contentDetails&key=%s' %
-                             (station_item["videoid"], str(self.config.dict["origin"]["api_key"])))
+                             (station_item["videoid"], str(self.fhdhr.config.dict["origin"]["api_key"])))
             video_response = urllib.request.urlopen(video_api_url)
             video_data = json.load(video_response)
 
