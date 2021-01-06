@@ -66,7 +66,10 @@ class OriginChannels():
 
         return channel_list
 
-    def get_channel_stream(self, chandict):
+    def get_channel_stream(self, chandict, stream_args):
         pafyobj = pafy.new(chandict["origin_id"])
-        stream_url = str(pafyobj.getbest().url)
-        return stream_url
+        streamurl = str(pafyobj.getbest().url)
+
+        stream_info = {"url": streamurl}
+
+        return stream_info
