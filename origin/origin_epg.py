@@ -46,7 +46,7 @@ class OriginEPG():
                                     "seasonnumber": None,
                                     "episodenumber": None,
                                     "isnew": False,
-                                    "id": str(chan_obj.dict["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0],
+                                    "id": "%s_%s" % (chan_obj.dict["origin_id"], str(timestamp['time_start']).split(" ")[0]),
                                     }
 
                 if not any(d['id'] == clean_prog_dict['id'] for d in programguide[str(chan_obj.number)]["listing"]):
